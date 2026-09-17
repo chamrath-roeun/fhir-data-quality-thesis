@@ -201,8 +201,9 @@ function realColumns(minN: number): Array<{ name: string; values: number[] }> {
 
 // ─── reporting ────────────────────────────────────────────────────────────
 
+// Percent sign lives in the caption, not in every cell — the table is wide enough.
 const pct = (m: { mean: number; sd: number }) =>
-  `${(m.mean * 100).toFixed(1)}\\,\\% (${(m.sd * 100).toFixed(1)})`
+  `${(m.mean * 100).toFixed(1)} (${(m.sd * 100).toFixed(1)})`
 
 function escapeTex(s: string): string {
   return s.replace(/([&%$#_{}])/g, '\\$1')
@@ -243,20 +244,24 @@ function main() {
     ``,
     `\\begin{table}[htbp]`,
     `\\centering`,
-    `\\caption{Detector performance against injected ground truth, ${TRIALS} trials per cell at a ${(INJECTION_RATE * 100).toFixed(0)}\\,\\% injection rate, with $k = 1.5$ for the Tukey fences and $|z| > 3$ for the $z$-score. Standard deviation across trials in parentheses. In Setting~B the baseline column may already contain genuine anomalies, so a flag on a non-injected row is not necessarily an error and precision is a lower bound.}`,
+    `\\footnotesize`,
+    `\\setlength{\\tabcolsep}{5pt}`,
+    `\\caption{Detector performance against injected ground truth, ${TRIALS} trials per group at a ${(INJECTION_RATE * 100).toFixed(0)}\\,\\% injection rate, with $k = 1.5$ for the Tukey fences and $|z| > 3$ for the $z$-score. All figures are percentages, with the standard deviation across trials in parentheses. In Setting~B the baseline column may already contain genuine anomalies, so a flag on a non-injected row is not necessarily an error and precision is a lower bound.}`,
     `\\label{tab:detector-supervised}`,
-    `\\begin{tabular}{llrrrr}`,
+    `\\begin{tabular}{@{}lrrrr@{}}`,
     `\\hline`,
-    `\\textbf{Setting} & \\textbf{Detector} & \\textbf{n} & \\textbf{Precision} & \\textbf{Recall} & \\textbf{F1} \\\\`,
+    `\\textbf{Detector} & \\textbf{n} & \\textbf{Precision} & \\textbf{Recall} & \\textbf{F1} \\\\`,
     `\\hline`,
-    `A: synthetic & Tukey IQR & ${a.n} & ${pct(a.iqr.precision)} & ${pct(a.iqr.recall)} & ${pct(a.iqr.f1)} \\\\`,
-    `A: synthetic & $z$-score & ${a.n} & ${pct(a.z.precision)} & ${pct(a.z.recall)} & ${pct(a.z.f1)} \\\\`,
-    `A: synthetic & Adjusted boxplot & ${a.n} & ${pct(a.adj.precision)} & ${pct(a.adj.recall)} & ${pct(a.adj.f1)} \\\\`,
-    `\\hline`,
+    `\\multicolumn{5}{@{}l}{\\emph{Setting A: synthetic log-normal baseline}} \\\\`,
+    `Tukey IQR        & ${a.n} & ${pct(a.iqr.precision)} & ${pct(a.iqr.recall)} & ${pct(a.iqr.f1)} \\\\`,
+    `$z$-score        & ${a.n} & ${pct(a.z.precision)} & ${pct(a.z.recall)} & ${pct(a.z.f1)} \\\\`,
+    `Adjusted boxplot & ${a.n} & ${pct(a.adj.precision)} & ${pct(a.adj.recall)} & ${pct(a.adj.f1)} \\\\`,
     ...bResults.flatMap(r => [
-      `B: \\texttt{${escapeTex(r.column)}} & Tukey IQR & ${r.n} & ${pct(r.iqr.precision)} & ${pct(r.iqr.recall)} & ${pct(r.iqr.f1)} \\\\`,
-      `B: \\texttt{${escapeTex(r.column)}} & $z$-score & ${r.n} & ${pct(r.z.precision)} & ${pct(r.z.recall)} & ${pct(r.z.f1)} \\\\`,
-      `B: \\texttt{${escapeTex(r.column)}} & Adjusted boxplot & ${r.n} & ${pct(r.adj.precision)} & ${pct(r.adj.recall)} & ${pct(r.adj.f1)} \\\\`,
+      `\\hline`,
+      `\\multicolumn{5}{@{}l}{\\emph{Setting B:} \\texttt{${escapeTex(r.column)}}} \\\\`,
+      `Tukey IQR        & ${r.n} & ${pct(r.iqr.precision)} & ${pct(r.iqr.recall)} & ${pct(r.iqr.f1)} \\\\`,
+      `$z$-score        & ${r.n} & ${pct(r.z.precision)} & ${pct(r.z.recall)} & ${pct(r.z.f1)} \\\\`,
+      `Adjusted boxplot & ${r.n} & ${pct(r.adj.precision)} & ${pct(r.adj.recall)} & ${pct(r.adj.f1)} \\\\`,
     ]),
     `\\hline`,
     `\\end{tabular}`,
@@ -264,9 +269,9 @@ function main() {
     ``,
     `\\begin{table}[htbp]`,
     `\\centering`,
-    `\\caption{Threshold sensitivity on the synthetic baseline. Each row varies one detector's threshold while the other is held at its default. Loosening the Tukey fence trades recall for precision; the $z$-score threshold cannot recover the recall the Tukey fences reach at any setting tested.}`,
+    `\\caption{Threshold sensitivity on the synthetic baseline. Each row varies one detector's threshold while the other is held at its default. All figures are percentages, with the standard deviation across trials in parentheses. Widening the Tukey fence trades a little recall for a lot of precision; the $z$-score threshold cannot recover the recall the Tukey fences reach at any setting tested.}`,
     `\\label{tab:detector-sensitivity}`,
-    `\\begin{tabular}{llrrr}`,
+    `\\begin{tabular}{@{}llrrr@{}}`,
     `\\hline`,
     `\\textbf{Detector} & \\textbf{Threshold} & \\textbf{Precision} & \\textbf{Recall} & \\textbf{F1} \\\\`,
     `\\hline`,
