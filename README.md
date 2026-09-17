@@ -34,12 +34,16 @@ src/lib/stats/descriptive.ts        mean, SD, type-7 quantiles,
                                     seeded percentile bootstrap, one-sample t-test
 src/lib/stats/descriptive.test.ts   tests, including a case checked against R's t.test()
 
-src/lib/fhir/anomaly.ts             the two outlier detectors: Tukey IQR fences
-                                    and sample z-score, plus the shared finding shape
+src/lib/fhir/anomaly.ts             three outlier detectors: Tukey IQR fences,
+                                    sample z-score, and the skew-adjusted boxplot
+                                    (medcouple), plus the shared finding shape
 src/lib/fhir/anomaly.test.ts        tests, including the SD-masking demonstration
+                                    and hand-verified medcouple reference values
 
 scripts/profile-anzer-schema.ts     exploratory profiling of the source snapshot
 scripts/detect-anomalies.ts         batch outlier run over every numeric column
+scripts/evaluate-detectors.ts       supervised evaluation: injects known corruptions
+                                    to build ground truth, reports precision/recall
 scripts/analyze-latency.ts          latency descriptives, bootstrap CI, t-test
 ```
 
@@ -50,6 +54,7 @@ scripts/analyze-latency.ts          latency descriptives, bootstrap CI, t-test
 | `scripts/profile-anzer-schema.ts` | §5.5.1 Exploratory Data Analysis of the Test Snapshot |
 | `scripts/detect-anomalies.ts` | §5.6 Statistical Outlier Detection |
 | `scripts/analyze-latency.ts` | §5.4.3 Statistical Treatment |
+| `scripts/evaluate-detectors.ts` | §5.6.1–5.6.4 Supervised Evaluation Against Injected Ground Truth |
 | `src/lib/fhir/anomaly.ts` | §3.6.3 Statistical Outlier Detection Layer, Appendix B |
 | `src/lib/stats/descriptive.ts` | Appendix B, Statistical Methods |
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectIQR, detectZ, findingsToIssues } from './anomaly'
+import { detectIQR, detectZ, findingsToIssues, medcouple, detectAdjustedBoxplot } from './anomaly'
 
 describe('detectIQR', () => {
   // Textbook Tukey example: for [1..10] Q1=3.25, Q3=7.75, IQR=4.5,
@@ -75,5 +75,64 @@ describe('findingsToIssues', () => {
       expect(i.field).toBe('claim.net')
       expect(typeof i.message).toBe('string')
     }
+  })
+})
+
+describe('medcouple', () => {
+  it('is 0 for a symmetric sample', () => {
+    expect(medcouple([1, 2, 3, 4, 5])).toBeCloseTo(0, 12)
+    expect(medcouple([-3, -2, -1, 0, 1, 2, 3])).toBeCloseTo(0, 12)
+  })
+
+  it('is positive for a genuinely right-skewed sample', () => {
+    // Skewed in shape, not by a single extreme point.
+    expect(medcouple([1, 1, 2, 2, 3, 3, 4, 5, 6, 8, 11, 15, 21, 30, 44]))
+      .toBeCloseTo(0.569231, 5)
+  })
+
+  it('is negative for the mirror image of that sample', () => {
+    const skewed = [1, 1, 2, 2, 3, 3, 4, 5, 6, 8, 11, 15, 21, 30, 44]
+    expect(medcouple(skewed.map(x => -x))).toBeCloseTo(-0.569231, 5)
+  })
+
+  it('stays within [-1, 1]', () => {
+    for (const xs of [[1, 2, 3, 4, 1e6], [1, 1, 1, 2, 3], [5, 5, 5, 5, 5, 9]]) {
+      const mc = medcouple(xs)
+      expect(mc).toBeGreaterThanOrEqual(-1)
+      expect(mc).toBeLessThanOrEqual(1)
+    }
+  })
+
+  // A single extreme point is not skew. For [1..10, 100] the kernel yields 36
+  // pairs — 15 negative, 5 zero, 16 positive — so the median lands exactly on
+  // zero. Hand-computed from the definition; this is the 25 % breakdown point
+  // doing its job, since one outlier in eleven is well inside it.
+  it('resists a lone outlier, which is the point of a robust statistic', () => {
+    expect(medcouple([1,2,3,4,5,6,7,8,9,10,100])).toBeCloseTo(0, 12)
+  })
+})
+
+describe('detectAdjustedBoxplot', () => {
+  it('collapses to Tukey fences when the data is symmetric (MC = 0)', () => {
+    const xs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100]
+    const adj = detectAdjustedBoxplot(xs)
+    // Symmetric core, so the adjustment should not move the fence far.
+    expect(adj.flagged.some(f => f.value === 100)).toBe(true)
+  })
+
+  it('tolerates a legitimate right tail that Tukey fences reject', () => {
+    // Right-skewed but clean: no value here is an error.
+    const skewed = [1, 1, 2, 2, 3, 3, 4, 5, 6, 8, 11, 15, 21, 30, 44]
+    const tukey = detectIQR(skewed)
+    const adj = detectAdjustedBoxplot(skewed)
+    expect(adj.flagged.length).toBeLessThanOrEqual(tukey.flagged.length)
+    expect(adj.thresholds.mc!).toBeGreaterThan(0)
+    expect(adj.thresholds.highFence!).toBeGreaterThan(tukey.thresholds.highFence!)
+  })
+
+  it('reports the medcouple it used', () => {
+    const r = detectAdjustedBoxplot([1, 2, 3, 4, 5, 6, 7, 8, 9, 50])
+    expect(typeof r.thresholds.mc).toBe('number')
+    expect(r.method).toBe('adjusted')
   })
 })
