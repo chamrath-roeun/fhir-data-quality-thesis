@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+.DS_Store
+
+# Measurement input and output — see scripts/results/FORMAT.md.
+# Never commit a database snapshot to this repository.
+scripts/results/*.json
+scripts/results/*.tex

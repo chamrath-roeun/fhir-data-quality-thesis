@@ -1,0 +1,24 @@
+{
+  "name": "gop-thesis-artifacts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Data-quality and evaluation code supporting the GOP FHIR pipeline thesis",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "profile": "tsx scripts/profile-anzer-schema.ts",
+    "anomalies": "tsx scripts/detect-anomalies.ts",
+    "latency": "tsx scripts/analyze-latency.ts"
+  },
+  "author": "Roeun Chamrath",
+  "license": "MIT",
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
